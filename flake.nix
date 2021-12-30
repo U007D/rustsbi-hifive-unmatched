@@ -20,6 +20,7 @@
               targets = [ "riscv64imac-unknown-none-elf" ];
             })
             cargo-binutils
+            pkgsCross.riscv64.buildPackages.binutils
           ];
         };
       });
