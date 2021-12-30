@@ -40,15 +40,19 @@ struct FwDynamicInfo {
     options: usize,
     boot_hart: usize,
 }
+const FW_DYNAMIC_INFO_MAGIC_VALUE: usize = 0x4942534f;
 
 fn rust_main(hart_id: usize, opaque: usize, fw_dynamic_info: *const FwDynamicInfo) {
     let clint = peripheral::Clint::new(0x2000000 as *mut u8);
-    if hart_id == 0 {
+    let fw_dynamic_info = unsafe { &*fw_dynamic_info };
+    let boot_hart = fw_dynamic_info.boot_hart;
+
+    if hart_id == boot_hart {
         init_bss();
         let uart = unsafe { peripheral::Uart::preloaded_uart0() };
         crate::console::init_stdout(uart);
-        for target_hart_id in 0..=4 {
-            if target_hart_id != 0 {
+        for target_hart_id in 1..=4 {
+            if target_hart_id != boot_hart {
                 clint.send_soft(target_hart_id);
             }
         }
@@ -62,14 +66,13 @@ fn rust_main(hart_id: usize, opaque: usize, fw_dynamic_info: *const FwDynamicInf
         opaque
     };
     early_trap::init(hart_id);
-    let fw_dynamic_info = unsafe { &*fw_dynamic_info };
-    if hart_id == 0 {
+    if hart_id == boot_hart {
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
         let uart = unsafe { peripheral::Uart::preloaded_uart0() };
         init_rustsbi_stdio(uart);
         init_rustsbi_clint(clint);
         println!("[rustsbi] RustSBI version {}", rustsbi::VERSION);
-        println!("{}", rustsbi::LOGO);
+        // println!("{}", rustsbi::LOGO);
         println!(
             "[rustsbi] Implementation: RustSBI-HiFive-Unleashed Version {}",
             env!("CARGO_PKG_VERSION")
@@ -77,22 +80,22 @@ fn rust_main(hart_id: usize, opaque: usize, fw_dynamic_info: *const FwDynamicInf
         if let Err(e) = unsafe { device_tree::parse_device_tree(opaque) } {
             println!("[rustsbi] warning: choose from device tree error, {}", e);
         }
+        delegate_interrupt_exception();
+        hart_csr_utils::print_hartn_csrs();
         println!(
             "[rustsbi] enter supervisor, opaque register {:#x}, fw_dynamic_info {:?}",
             opaque,
             &fw_dynamic_info
         );
-        hart_csr_utils::print_hart0_csrs();
-        for target_hart_id in 0..=4 {
-            if target_hart_id != 0 {
+        for target_hart_id in 1..=4 {
+            if target_hart_id != boot_hart {
                 clint.send_soft(target_hart_id);
             }
         }
     } else {
         // 不是初始化核，先暂停
-        delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
-        if hart_id == 1 {
-            hart_csr_utils::print_hartn_csrs();
+        if hart_id != 0 {
+            delegate_interrupt_exception(); // 第0个核不能委托中断（@dram）
         }
         pause(clint);
     }
