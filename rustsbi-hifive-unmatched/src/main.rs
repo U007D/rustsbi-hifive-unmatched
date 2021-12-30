@@ -29,7 +29,19 @@ fn on_panic(info: &PanicInfo) -> ! {
 
 static DEVICE_TREE: &'static [u8] = include_bytes!("hifive-unmatched-a00.dtb");
 
-fn rust_main(hart_id: usize, opaque: usize) {
+// ref: https://github.com/riscv-software-src/opensbi/blob/master/include/sbi/fw_dynamic.h
+#[repr(C)]
+#[derive(Debug)]
+struct FwDynamicInfo {
+    magic: usize,
+    version: usize,
+    next_addr: usize,
+    next_mode: usize,
+    options: usize,
+    boot_hart: usize,
+}
+
+fn rust_main(hart_id: usize, opaque: usize, fw_dynamic_info: *const FwDynamicInfo) {
     let clint = peripheral::Clint::new(0x2000000 as *mut u8);
     if hart_id == 0 {
         init_bss();
@@ -50,6 +62,7 @@ fn rust_main(hart_id: usize, opaque: usize) {
         opaque
     };
     early_trap::init(hart_id);
+    let fw_dynamic_info = unsafe { &*fw_dynamic_info };
     if hart_id == 0 {
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
         let uart = unsafe { peripheral::Uart::preloaded_uart0() };
@@ -65,8 +78,9 @@ fn rust_main(hart_id: usize, opaque: usize) {
             println!("[rustsbi] warning: choose from device tree error, {}", e);
         }
         println!(
-            "[rustsbi] enter supervisor 0x80200000, opaque register {:#x}",
-            opaque
+            "[rustsbi] enter supervisor, opaque register {:#x}, fw_dynamic_info {:?}",
+            opaque,
+            &fw_dynamic_info
         );
         hart_csr_utils::print_hart0_csrs();
         for target_hart_id in 0..=4 {
@@ -83,7 +97,7 @@ fn rust_main(hart_id: usize, opaque: usize) {
         pause(clint);
     }
     runtime::init();
-    execute::execute_supervisor(0x80200000, hart_id, opaque);
+    execute::execute_supervisor(fw_dynamic_info.next_addr, hart_id, opaque);
 }
 
 fn init_bss() {
@@ -194,10 +208,9 @@ unsafe extern "C" fn entry() -> ! {
     li x7, 0
     li x8, 0
     li x9, 0",
-    // no x10 and x11: x10 is a0 and x11 is a1, they are passed to 
+    // no x10, x11 and x12: x10 is a0, x11 is a1 and x12 is a2, they are passed to
     // main function as arguments
-    "li x12, 0
-    li x13, 0
+    "li x13, 0
     li x14, 0
     li x15, 0
     li x16, 0
