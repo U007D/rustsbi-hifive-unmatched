@@ -66,6 +66,7 @@ fn rust_main(hart_id: usize, opaque: usize, fw_dynamic_info: *const FwDynamicInf
         opaque
     };
     early_trap::init(hart_id);
+    hart_csr_utils::set_pmp();
     if hart_id == boot_hart {
         init_heap(); // 必须先加载堆内存，才能使用rustsbi框架
         let uart = unsafe { peripheral::Uart::preloaded_uart0() };

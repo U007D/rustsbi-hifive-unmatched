@@ -123,6 +123,16 @@ fn print_medeleg() {
     );
 }
 
+// ref: https://forums.sifive.com/t/u54-core-on-arty-7-s-mode/2986/3
+pub fn set_pmp() {
+    unsafe { core::arch::asm!(
+    "csrwi   0x3A0, 0b00001111",
+    "li      t0, 0xffffffffffffffff",
+    "csrw    0x3B0, t0",
+    ); }
+}
+
+
 #[cfg(target_pointer_width = "64")]
 #[inline]
 fn print_pmp() {
