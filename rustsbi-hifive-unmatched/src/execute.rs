@@ -54,16 +54,10 @@ unsafe fn get_vaddr_u32(vaddr: usize) -> u32 {
         li      {tmp}, (1 << 16)
         csrrs   {tmp}, mstatus, {tmp}
         add     {ans}, zero, zero
-        lbu     {scratch}, 0({vaddr})
+        lhu     {scratch}, 2({vaddr})
         add     {ans}, {ans}, {scratch}
-        slli    {ans}, {ans}, 8
-        lbu     {scratch}, 1({vaddr})
-        add     {ans}, {ans}, {scratch}
-        slli    {ans}, {ans}, 8
-        lbu     {scratch}, 2({vaddr})
-        add     {ans}, {ans}, {scratch}
-        slli    {ans}, {ans}, 8
-        lbu     {scratch}, 3({vaddr})
+        slli    {ans}, {ans}, 16
+        lhu     {scratch}, 0({vaddr})
         add     {ans}, {ans}, {scratch}
         csrw    mstatus, {tmp}
         ",
