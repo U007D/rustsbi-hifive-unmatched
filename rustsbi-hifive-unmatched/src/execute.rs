@@ -50,6 +50,9 @@ pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize)
 #[inline]
 unsafe fn get_vaddr_u32(vaddr: usize) -> u32 {
     let mut ans: u32;
+    let addr = vaddr as *const u32;
+    ans = *addr;
+    /*
     core::arch::asm!("
         li      {tmp}, (1 << 16)
         csrrs   {tmp}, mstatus, {tmp}
@@ -66,6 +69,7 @@ unsafe fn get_vaddr_u32(vaddr: usize) -> u32 {
         vaddr = in(reg) vaddr,
         ans = lateout(reg) ans
     );
+    */
     ans
 }
 
