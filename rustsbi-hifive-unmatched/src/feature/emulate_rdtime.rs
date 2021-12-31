@@ -9,9 +9,9 @@ pub fn emulate_rdtime(ctx: &mut SupervisorContext, ins: usize) -> bool {
         let time_usize = clint.get_mtime() as usize;
         set_register_xi(ctx, rd, time_usize);
         ctx.mepc = ctx.mepc.wrapping_add(4); // skip rdtime instruction
-        panic!("rdtime!!!!!");
         return true;
     } else {
+        panic!("not rdtime!!!!!");
         return false; // is not a rdtime instruction
     }
 }
