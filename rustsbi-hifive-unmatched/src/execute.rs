@@ -52,10 +52,22 @@ unsafe fn get_vaddr_u32(vaddr: usize) -> u32 {
     core::arch::asm!("
         li      {tmp}, (1 << 17)
         csrrs   {tmp}, mstatus, {tmp}
-        lwu     {ans}, 0({vaddr})
+        add     {ans}, zero, zero
+        lbu     {scratch}, 0({vaddr})
+        add     {ans}, {ans}, {scratch}
+        slli    {ans}, {ans}, 8
+        lbu     {scratch}, 1({vaddr})
+        add     {ans}, {ans}, {scratch}
+        slli    {ans}, {ans}, 8
+        lbu     {scratch}, 2({vaddr})
+        add     {ans}, {ans}, {scratch}
+        slli    {ans}, {ans}, 8
+        lbu     {scratch}, 3({vaddr})
+        add     {ans}, {ans}, {scratch}
         csrw    mstatus, {tmp}
         ",
         tmp = out(reg) _,
+        scratch = out(reg) _,
         vaddr = in(reg) vaddr,
         ans = lateout(reg) ans
     );
