@@ -61,7 +61,10 @@ impl Generator for Runtime {
             Trap::Exception(Exception::IllegalInstruction) => MachineTrap::IllegalInstruction(),
             Trap::Interrupt(Interrupt::MachineTimer) => MachineTrap::MachineTimer(),
             Trap::Interrupt(Interrupt::MachineSoft) => MachineTrap::MachineSoft(),
-            e => loop {},
+            e => panic!(
+                "unhandled exception: {:?}! mtval: {:x?}, ctx: {:x?}",
+                e, mtval, self.context
+            ),
         };
         GeneratorState::Yielded(trap)
     }
