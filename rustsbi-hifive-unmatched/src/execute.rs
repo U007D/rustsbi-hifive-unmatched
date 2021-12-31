@@ -41,7 +41,7 @@ pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize)
                 mip::set_stimer();
                 mie::clear_mtimer();
             },
-            GeneratorState::Yielded(MachineTrap::MachineSoft()) => todo!(),
+            GeneratorState::Yielded(MachineTrap::MachineSoft()) => continue,
             GeneratorState::Complete(()) => break,
         }
     }
