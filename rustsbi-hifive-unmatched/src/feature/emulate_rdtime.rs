@@ -11,7 +11,7 @@ pub fn emulate_rdtime(ctx: &mut SupervisorContext, ins: usize) -> bool {
         ctx.mepc = ctx.mepc.wrapping_add(4); // skip rdtime instruction
         return true;
     } else {
-        panic!("not rdtime!!!!!");
+        panic!("not rdtime!!!!! {:#x}", ins);
         return false; // is not a rdtime instruction
     }
 }
