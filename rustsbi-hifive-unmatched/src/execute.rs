@@ -20,6 +20,7 @@ pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize)
                 ctx.mepc = ctx.mepc.wrapping_add(4);
             }
             GeneratorState::Yielded(MachineTrap::IllegalInstruction()) => {
+                panic!("ill!!!!!!!!");
                 let ctx = rt.context_mut();
                 // FIXME: get_vaddr_u32这个过程可能出错。
                 let ins = unsafe { get_vaddr_u32(ctx.mepc) } as usize;
