@@ -3,6 +3,7 @@ use crate::runtime::SupervisorContext;
 
 #[inline]
 pub fn emulate_rdtime(ctx: &mut SupervisorContext, ins: usize) -> bool {
+    ctx.mepc = ctx.mepc.wrapping_add(4); // skip rdtime instruction
     return true;
     if ins & 0xFFFFF07F == 0xC0102073 {
         let rd = ((ins >> 7) & 0b1_1111) as u8;
