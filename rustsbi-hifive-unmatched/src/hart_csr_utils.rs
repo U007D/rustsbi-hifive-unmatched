@@ -129,8 +129,8 @@ pub fn set_pmp() {
     "csrwi   0x3A0, 0b00001111",
     "li      t0, 0xffffffffffffffff",
     "csrw    0x3B0, t0",
-    "csrwi   satp, 0",
     ); }
+    riscv::register::satp::write(0);
 }
 
 

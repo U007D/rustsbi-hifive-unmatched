@@ -21,6 +21,8 @@ pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize)
             }
             GeneratorState::Yielded(MachineTrap::IllegalInstruction()) => {
                 let ctx = rt.context_mut();
+                ctx.mepc = ctx.mepc.wrapping_add(4);
+                /*
                 // FIXME: get_vaddr_u32这个过程可能出错。
                 let ins = unsafe { get_vaddr_u32(ctx.mepc) } as usize;
                 if !emulate_illegal_instruction(ctx, ins) {
@@ -36,6 +38,7 @@ pub fn execute_supervisor(supervisor_mepc: usize, hart_id: usize, opaque: usize)
                         }
                     }
                 }
+                */
             }
             GeneratorState::Yielded(MachineTrap::MachineTimer()) => unsafe {
                 mip::set_stimer();
